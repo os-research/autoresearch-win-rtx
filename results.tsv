@@ -1,2 +1,3 @@
 commit	val_bpb	memory_gb	status	description
 a32536d	0.630820	1.7	keep	baseline
+64e2acc	0.528346	1.7	keep	reduce TOTAL_BATCH_SIZE for more steps
