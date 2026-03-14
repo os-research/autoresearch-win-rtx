@@ -57,6 +57,34 @@ Did the result match expectations? Why or why not?
 
 **IMPORTANT**: Before proposing new experiments, you MUST read previous files in `reads/` to avoid repeating failed ideas and build on successful ones.
 
+## Run Output Storage
+
+**Create the runs folder**: The `runs/` folder stores complete run outputs. Create it at the repository root (only on master branch):
+
+```
+mkdir runs
+```
+
+**After every experiment, save the following to `runs/`:**
+
+1. **Experiment summary file** (same as reads):
+   ```
+   runs/YYYY-MM-DD_HH-MM_experiment.md
+   ```
+   This should contain the same content as the reads file.
+
+2. **Run log file**: Copy `run.log` to:
+   ```
+   runs/YYYY-MM-DD_HH-MM_run.log
+   ```
+
+3. **Results TSV**: Copy `results.tsv` to:
+   ```
+   runs/YYYY-MM-DD_HH-MM_results.tsv
+   ```
+
+The `runs/` folder is only maintained on the master branch. Experiment branches do not need to include the runs folder.
+
 ## Experimentation
 
 Each experiment runs on a single GPU. The training script runs for a **fixed time budget of 15 minutes** (wall clock training time, excluding startup/compilation). You launch it simply as: `uv run train.py`.
@@ -140,19 +168,27 @@ LOOP FOREVER:
 6. **Read results**: `grep "^val_bpb:\|^peak_vram_mb:" run.log`
 7. **Handle crashes**: If the grep output is empty, the run crashed. Run `tail -n 50 run.log` to read the Python stack trace and attempt a fix. If you can't get things to work after more than a few attempts, give up.
 8. **Record results**: Create a new markdown file in `reads/` with the experiment summary.
-9. **Commit and push**: Commit the changes and the reads file, then push the branch to GitHub:
+9. **Save to runs folder**: Copy the experiment summary and run log to the `runs/` folder:
    ```
-   git add reads/
-   git commit -m "Experiment: <description>"
-   git push origin experiment/<timestamp>
+   cp reads/YYYY-MM-DD_HH-MM_experiment.md runs/
+   cp run.log runs/YYYY-MM-DD_HH-MM_run.log
+   cp results.tsv runs/YYYY-MM-DD_HH-MM_results.tsv
    ```
-10. **Merge if successful**: If val_bpb improved (lower), merge to master:
+10. **Commit and push**: Commit the changes and the reads file, then push the branch to GitHub:
+    ```
+    git add reads/
+    git commit -m "Experiment: <description>"
+    git push origin experiment/<timestamp>
+    ```
+11. **Merge if successful**: If val_bpb improved (lower), merge to master and push runs:
     ```
     git checkout master
     git merge experiment/<timestamp>
+    git add runs/
+    git commit -m "Add run results: <timestamp>"
     git push origin master
     ```
-    If the experiment failed or degraded performance, do NOT merge, but still push the branch to keep the complete history.
+    If the experiment failed or degraded performance, do NOT merge, but still push the experiment branch to keep the complete history.
 
 The idea is that you are a completely autonomous researcher trying things out. If they work, keep. If they don't, discard. And you're advancing the branch so that you can iterate. If you feel like you're getting stuck in some way, you can rewind but you should probably do this very very sparingly (if ever).
 
@@ -160,7 +196,7 @@ The idea is that you are a completely autonomous researcher trying things out. I
 
 **Crashes**: If a run crashes (OOM, or a bug, or etc.), use your judgment: If it's something dumb and easy to fix (e.g. a typo, a missing import), fix it and re-run. If the idea itself is fundamentally broken, just skip it, log "crash" as the status in the tsv, and move on.
 
-**IMPORTANT**: The `reads/` folder must always be committed and pushed, even if the experiment code changes are rejected. This ensures GitHub stores all experiment knowledge.
+**IMPORTANT**: The `reads/` folder must always be committed and pushed, even if the experiment code changes are rejected. This ensures GitHub stores all experiment knowledge. The `runs/` folder is only maintained on master branch.
 
 **NEVER STOP**: Once the experiment loop has begun (after the initial setup), do NOT pause to ask the human if you should continue. Do NOT ask "should I keep going?" or "is this a good stopping point?". The human might be asleep, or gone from a computer and expects you to continue working *indefinitely* until you are manually stopped. You are autonomous. If you run out of ideas, think harder — read papers referenced in the code, re-read the in-scope files for new angles, try combining previous near-misses, try more radical architectural changes. The loop runs until the human interrupts you, period.
 
