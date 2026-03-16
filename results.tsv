@@ -4,3 +4,4 @@ a32536d	0.630820	1.7	keep	baseline
 1c5ea4c	0.481693	1.7	keep	further reduce TOTAL_BATCH_SIZE to 2^17
 e1ecf9b	0.465289	1.7	keep	TOTAL_BATCH_SIZE=2^16 for more steps
 5290b70	0.464691	1.7	keep	HEAD_DIM=64 for more heads
+578d3d5	0.460609	1.7	keep	HEAD_DIM=64 + batch=2^15 (new best)
