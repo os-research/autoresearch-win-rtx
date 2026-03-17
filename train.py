@@ -652,7 +652,7 @@ class GPT(nn.Module):
                         params=chunk,
                         lr=matrix_lr,
                         momentum=0.95,
-                        ns_steps=5,
+                        ns_steps=8,
                         beta2=0.95,
                         weight_decay=weight_decay,
                     )
@@ -885,15 +885,15 @@ WINDOW_PATTERN = "SSSL"  # sliding window pattern: L=full, S=half context
 
 # Optimization
 TOTAL_BATCH_SIZE = 2**15
-EMBEDDING_LR = 0.9
+EMBEDDING_LR = 1.2
 UNEMBEDDING_LR = 0.004
 MATRIX_LR = 0.04
-SCALAR_LR = 0.5
-WEIGHT_DECAY = 0.2
-ADAM_BETAS = (0.8, 0.95)
+SCALAR_LR = 0.8
+WEIGHT_DECAY = 0.1
+ADAM_BETAS = (0.8, 0.99)
 WARMUP_RATIO = 0.0
 WARMDOWN_RATIO = 0.5
-FINAL_LR_FRAC = 0.0
+FINAL_LR_FRAC = 0.1
 
 # Model size + memory defaults
 DEPTH = 8

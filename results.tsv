@@ -1,8 +1,8 @@
 commit	val_bpb	memory_gb	status	description
-a32536d	0.630820	1.7	keep	baseline
-64e2acc	0.528346	1.7	keep	reduce TOTAL_BATCH_SIZE for more steps
-1c5ea4c	0.481693	1.7	keep	further reduce TOTAL_BATCH_SIZE to 2^17
-e1ecf9b	0.465289	1.7	keep	TOTAL_BATCH_SIZE=2^16 for more steps
-5290b70	0.464691	1.7	keep	HEAD_DIM=64 for more heads
-578d3d5	0.460609	1.7	keep	HEAD_DIM=64 + batch=2^15
-96dee83	0.460118	1.7	keep	HEAD_DIM=64 + batch=2^15 + LR=0.9 (new best)
+59cda4d	0.460450	1.7	keep	baseline
+59cda4d	0.458725	1.7	keep	WEIGHT_DECAY=0.1
+59cda4d	0.458594	1.7	keep	EMBEDDING_LR=1.2
+59cda4d	0.458335	1.7	keep	SCALAR_LR=0.8
+59cda4d	0.458311	1.7	keep	FINAL_LR_FRAC=0.1
+59cda4d	0.457178	1.7	keep	ADAM_BETAS=(0.8, 0.99)
+59cda4d	0.457130	1.7	keep	ns_steps=8 new best
