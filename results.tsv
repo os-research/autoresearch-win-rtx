@@ -5,4 +5,5 @@ commit	val_bpb	memory_gb	status	description
 59cda4d	0.458335	1.7	keep	SCALAR_LR=0.8
 59cda4d	0.458311	1.7	keep	FINAL_LR_FRAC=0.1
 59cda4d	0.457178	1.7	keep	ADAM_BETAS=(0.8, 0.99)
-59cda4d	0.457130	1.7	keep	ns_steps=8 new best
+59cda4d	0.457130	1.7	keep	ns_steps=8
+59cda4d	0.456283	1.7	keep	SCALAR_LR=1.0 new best
