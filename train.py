@@ -424,6 +424,42 @@ class CausalSelfAttention(nn.Module):
         return y
 
 
+class MoE(nn.Module):
+    def __init__(self, config, num_experts=3, top_k=3):
+        super().__init__()
+        self.n_embd = config.n_embd
+        self.num_experts = num_experts
+        self.top_k = top_k
+        self.router = nn.Linear(config.n_embd, num_experts, bias=False)
+        self.experts = nn.ModuleList(
+            [
+                nn.Sequential(
+                    nn.Linear(config.n_embd, 4 * config.n_embd, bias=False),
+                    nn.ReLU(),
+                    nn.Linear(4 * config.n_embd, config.n_embd, bias=False),
+                )
+                for _ in range(num_experts)
+            ]
+        )
+
+    def forward(self, x):
+        B, T, D = x.shape
+        x_flat = x.view(-1, D)
+        router_logits = self.router(x_flat)
+        weights = F.softmax(router_logits, dim=-1)
+        top_weights, top_indices = torch.topk(weights, self.top_k, dim=-1)
+        top_weights = top_weights / top_weights.sum(dim=-1, keepdim=True)
+        out = torch.zeros_like(x_flat)
+        for k in range(self.top_k):
+            expert_idx = top_indices[:, k]
+            w = top_weights[:, k].unsqueeze(-1)
+            for i in range(self.num_experts):
+                mask = expert_idx == i
+                if mask.any():
+                    out[mask] += w[mask] * self.experts[i](x_flat[mask])
+        return out.view(B, T, D)
+
+
 class MLP(nn.Module):
     def __init__(self, config):
         super().__init__()
@@ -441,7 +477,7 @@ class Block(nn.Module):
     def __init__(self, config, layer_idx):
         super().__init__()
         self.attn = CausalSelfAttention(config, layer_idx)
-        self.mlp = MLP(config)
+        self.mlp = MoE(config, num_experts=3, top_k=3)
 
     def forward(self, x, ve, cos_sin, window_size):
         x = x + self.attn(norm(x), ve, cos_sin, window_size)
@@ -490,8 +526,10 @@ class GPT(nn.Module):
             torch.nn.init.uniform_(block.attn.c_k.weight, -s, s)
             torch.nn.init.uniform_(block.attn.c_v.weight, -s, s)
             torch.nn.init.zeros_(block.attn.c_proj.weight)
-            torch.nn.init.uniform_(block.mlp.c_fc.weight, -s, s)
-            torch.nn.init.zeros_(block.mlp.c_proj.weight)
+            torch.nn.init.normal_(block.mlp.router.weight, mean=0.0, std=0.02)
+            for expert in block.mlp.experts:
+                torch.nn.init.uniform_(expert[0].weight, -s, s)
+                torch.nn.init.zeros_(expert[2].weight)
         self.resid_lambdas.fill_(1.0)
         self.x0_lambdas.fill_(0.1)
         for ve in self.value_embeds.values():
@@ -879,7 +917,7 @@ class MuonAdamW(torch.optim.Optimizer):
 # ---------------------------------------------------------------------------
 
 # Model architecture
-ASPECT_RATIO = 64  # model_dim = depth * ASPECT_RATIO
+ASPECT_RATIO = 80  # model_dim = depth * ASPECT_RATIO
 HEAD_DIM = 64  # target head dimension for attention
 WINDOW_PATTERN = "SSSL"  # sliding window pattern: L=full, S=half context
 
@@ -888,12 +926,12 @@ TOTAL_BATCH_SIZE = 2**15
 EMBEDDING_LR = 1.2
 UNEMBEDDING_LR = 0.004
 MATRIX_LR = 0.04
-SCALAR_LR = 1.2
+SCALAR_LR = 1.0
 WEIGHT_DECAY = 0.1
 ADAM_BETAS = (0.8, 0.99)
 WARMUP_RATIO = 0.0
 WARMDOWN_RATIO = 0.5
-FINAL_LR_FRAC = 0.1
+FINAL_LR_FRAC = 0.05
 
 # Model size + memory defaults
 DEPTH = 8
